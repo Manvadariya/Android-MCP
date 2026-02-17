@@ -1,36 +1,24 @@
-name: Build Android MCP APK
+name: Diagnose Repo
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
+      - name: Show repo structure
+        run: |
+          echo "Listing files:"
+          ls -R
 
       - name: Find gradlew
         run: |
-          GRADLEW_PATH=$(find . -name gradlew | head -n 1)
-          echo "Found gradlew at $GRADLEW_PATH"
-          echo "GRADLEW_PATH=$GRADLEW_PATH" >> $GITHUB_ENV
-
-      - name: Build APK
-        run: |
-          chmod +x $GRADLEW_PATH
-          cd $(dirname $GRADLEW_PATH)
-          ./gradlew assembleDebug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-mcp-apk
-          path: "**/app/build/outputs/apk/debug/*.apk"
+          GRADLEW=$(find . -name gradlew | head -n 1)
+          if [ -z "$GRADLEW" ]; then
+            echo "No Android project found (no gradlew)."
+            exit 1
+          fi
